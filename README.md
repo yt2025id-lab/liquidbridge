@@ -149,7 +149,7 @@ npm run start:mock-api
 | LiquidBridgeFactory | `0x18b70a873cA71682122c6CC58BC401185fefE47f` |
 | LiquidBridgePool | `0x61d60590b5a47628D895F71e072BFA531189Da7F` |
 | LiquidBridgeRouter | `0xCc824965d3624F5a8852dfC46E02a5f497F02967` |
-| CREReceiver | `TBD (deploy with Deploy.s.sol)` |
+| CREReceiver | `0x5a618f0317d4c5514af7775e17795Abd7525F7C7` |
 
 ## CRE Workflow Architecture
 
