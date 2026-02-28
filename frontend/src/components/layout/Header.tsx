@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { cn } from "@/lib/utils";
@@ -22,9 +23,13 @@ export function Header() {
 
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                LB
-              </div>
+              <Image
+                src="/LogoLiquidBridgeTransparan.png"
+                alt="LiquidBridge"
+                width={36}
+                height={36}
+                className="object-contain"
+              />
               <span className="text-slate-900 font-bold text-lg hidden sm:block tracking-tight">
                 LiquidBridge
               </span>
