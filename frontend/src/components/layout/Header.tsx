@@ -17,7 +17,7 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-slate-200 bg-white sticky top-0 z-50 shadow-sm">
+    <header className="border-b border-slate-700 bg-slate-900 sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
@@ -30,7 +30,7 @@ export function Header() {
                 height={36}
                 className="object-contain"
               />
-              <span className="text-slate-900 font-bold text-lg hidden sm:block tracking-tight">
+              <span className="text-white font-bold text-lg hidden sm:block tracking-tight">
                 LiquidBridge
               </span>
             </Link>
@@ -43,8 +43,8 @@ export function Header() {
                   className={cn(
                     "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                     pathname === link.href
-                      ? "bg-teal-50 text-teal-700 font-semibold"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                      ? "bg-teal-500/20 text-teal-400 font-semibold"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700"
                   )}
                 >
                   {link.label}
@@ -54,7 +54,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+            <span className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
               Base Sepolia
             </span>
@@ -68,7 +68,7 @@ export function Header() {
       </div>
 
       {/* Mobile bottom nav */}
-      <div className="md:hidden border-t border-slate-100 flex">
+      <div className="md:hidden border-t border-slate-700 bg-slate-900 flex">
         {navLinks.map((link) => (
           <Link
             key={link.href}
@@ -76,8 +76,8 @@ export function Header() {
             className={cn(
               "flex-1 text-center py-2.5 text-xs font-medium transition-colors",
               pathname === link.href
-                ? "text-teal-700 border-b-2 border-teal-600"
-                : "text-slate-400"
+                ? "text-teal-400 border-b-2 border-teal-500"
+                : "text-slate-500"
             )}
           >
             {link.label}
