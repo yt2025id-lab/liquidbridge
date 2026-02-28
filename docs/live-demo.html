@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>LiquidBridge — Live Demo | Chainlink Convergence Hackathon 2026</title>
+<style>
+:root {
+  --bg: #060912;
+  --panel: #0d1424;
+  --card: #111827;
+  --border: rgba(45,212,191,0.18);
+  --teal: #2DD4BF;
+  --blue: #3B82F6;
+  --green: #22C55E;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --text: #F9FAFB;
+  --muted: #6B7280;
+  --dim: #374151;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────────── */
+header {
+  height: 56px; flex-shrink: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+}
+.logo {
+  background: linear-gradient(135deg, var(--teal), var(--blue));
+  border-radius: 8px; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 14px; color: #000; flex-shrink: 0;
+}
+.header-title { font-size: 16px; font-weight: 700; }
+.header-sub { font-size: 12px; color: var(--muted); }
+.header-spacer { flex: 1; }
+.chainlink-badge {
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 20px; padding: 4px 12px; font-size: 11px; color: #93C5FD;
+  display: flex; align-items: center; gap: 6px;
+}
+.cl-dot { width:6px; height:6px; border-radius:50%; background:#3B82F6; animation: pulse-cl 2s infinite; }
+@keyframes pulse-cl { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── MAIN LAYOUT ─────────────────────────── */
+main {
+  flex: 1; display: flex; overflow: hidden; gap: 0;
+}
+
+/* ── LEFT STEPS PANEL ───────────────────── */
+.steps-panel {
+  width: 230px; flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 16px 0;
+}
+.steps-label {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  letter-spacing: 1.5px; padding: 0 16px 12px;
+  text-transform: uppercase;
+}
+.step-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 16px; cursor: default;
+  border-left: 3px solid transparent;
+  transition: all 0.3s;
+  position: relative;
+}
+.step-item.active {
+  background: rgba(45,212,191,0.06);
+  border-left-color: var(--teal);
+}
+.step-item.done .step-num {
+  background: rgba(34,197,94,0.2);
+  border-color: var(--green);
+  color: var(--green);
+}
+.step-item.done .step-num::after { content: '✓'; }
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1.5px solid var(--dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  flex-shrink: 0; transition: all 0.3s;
+}
+.step-item.active .step-num {
+  background: rgba(45,212,191,0.2);
+  border-color: var(--teal); color: var(--teal);
+  box-shadow: 0 0 8px rgba(45,212,191,0.4);
+  animation: pulse-num 1.5s infinite;
+}
+@keyframes pulse-num { 0%,100%{box-shadow:0 0 8px rgba(45,212,191,0.4)} 50%{box-shadow:0 0 16px rgba(45,212,191,0.7)} }
+.step-info { flex: 1; min-width: 0; }
+.step-name { font-size: 13px; font-weight: 600; color: var(--muted); transition: color 0.3s; }
+.step-item.active .step-name { color: var(--text); }
+.step-item.done .step-name { color: var(--green); }
+.step-tag { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+.steps-connector {
+  width: 1.5px; height: 12px;
+  background: var(--dim); margin: 2px 28px;
+}
+.steps-connector.done { background: var(--green); }
+
+.story-box {
+  margin: auto 16px 0;
+  background: rgba(45,212,191,0.06);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
+}
+.story-box .s-title { font-size: 10px; color: var(--teal); font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
+.story-box .s-line { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.story-box .s-line span { color: var(--text); font-weight: 600; }
+
+/* ── CENTER MAIN PANEL ───────────────────── */
+.center-panel {
+  flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+.step-content {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px 32px;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+.step-content.active {
+  opacity: 1; transform: translateY(0);
+  pointer-events: all;
+}
+
+.step-heading {
+  font-size: 13px; font-weight: 600; color: var(--teal);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 6px; text-align: center;
+}
+.step-title {
+  font-size: 28px; font-weight: 800; text-align: center;
+  margin-bottom: 24px;
+}
+.step-desc {
+  font-size: 14px; color: var(--muted); text-align: center;
+  line-height: 1.6; max-width: 520px; margin-bottom: 24px;
+}
+
+/* ── WALLET ANIMATION ─── */
+.wallet-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 40px;
+  text-align: center; max-width: 420px; width: 100%;
+}
+.wallet-icon { font-size: 48px; margin-bottom: 16px; }
+.wallet-addr {
+  font-family: monospace; font-size: 16px;
+  color: var(--teal); margin-bottom: 8px;
+  letter-spacing: 1px; min-height: 24px;
+}
+.wallet-network {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 12px; color: #93C5FD;
+}
+
+/* ── KYC ANIMATION ─── */
+.kyc-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 40px;
+  text-align: center; max-width: 420px; width: 100%;
+}
+.kyc-icon { font-size: 48px; margin-bottom: 16px; }
+.kyc-steps { text-align: left; margin-top: 16px; }
+.kyc-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; font-size: 13px; color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.kyc-step:last-child { border-bottom: none; }
+.kyc-check { font-size: 16px; opacity: 0; transition: opacity 0.3s; }
+.kyc-check.visible { opacity: 1; }
+.kyc-result {
+  margin-top: 16px; padding: 12px;
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 8px; font-size: 14px; color: var(--green);
+  font-weight: 600; opacity: 0; transition: all 0.5s;
+}
+.kyc-result.show { opacity: 1; }
+
+/* ── SWAP ANIMATION ─── */
+.swap-viz {
+  display: flex; align-items: center; gap: 20px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px 32px;
+  max-width: 640px; width: 100%;
+}
+.swap-token {
+  flex: 1; text-align: center;
+}
+.token-coin {
+  width: 60px; height: 60px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; margin: 0 auto 8px;
+}
+.coin-usdc { background: rgba(34,197,94,0.2); border: 2px solid var(--green); color: var(--green); }
+.coin-rwa { background: rgba(59,130,246,0.2); border: 2px solid var(--blue); color: var(--blue); }
+.token-amount { font-size: 26px; font-weight: 800; margin-bottom: 2px; }
+.token-symbol { font-size: 13px; color: var(--muted); }
+.token-usd { font-size: 11px; color: var(--teal); margin-top: 2px; }
+
+.swap-middle { text-align: center; flex-shrink: 0; }
+.swap-arrow { font-size: 28px; color: var(--teal); margin-bottom: 4px; }
+.oracle-pill {
+  background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.3);
+  border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--teal);
+  white-space: nowrap; margin-bottom: 4px;
+}
+.fee-pill {
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--amber);
+  white-space: nowrap;
+}
+.tx-hash {
+  margin-top: 16px; padding: 10px 16px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--dim);
+  border-radius: 8px; font-family: monospace; font-size: 11px;
+  color: var(--muted); text-align: center;
+}
+.tx-hash span { color: var(--teal); }
+
+/* ── CRE NETWORK ANIMATION ─── */
+.cre-viz {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px; width: 100%; max-width: 620px;
+}
+.don-nodes {
+  display: flex; gap: 12px; align-items: center;
+}
+.don-node {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--card); border: 1.5px solid var(--dim);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  transition: all 0.4s;
+  position: relative;
+}
+.don-node.lit {
+  border-color: var(--teal);
+  background: rgba(45,212,191,0.12);
+  color: var(--teal);
+  box-shadow: 0 0 12px rgba(45,212,191,0.4);
+}
+.don-node .n-icon { font-size: 18px; margin-bottom: 2px; }
+
+.cre-arrow-row {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+}
+.cre-arrow { color: var(--teal); font-size: 16px; animation: bounce-d 1s infinite; }
+@keyframes bounce-d { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+.cre-flow-line {
+  flex: 1; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  animation: flow 2s linear infinite;
+}
+@keyframes flow { 0%{opacity:0.3} 50%{opacity:1} 100%{opacity:0.3} }
+
+.cre-box {
+  background: var(--card); border-radius: 10px; padding: 10px 16px;
+  font-size: 12px; font-weight: 700; text-align: center;
+  border: 1px solid; transition: all 0.5s;
+  white-space: nowrap;
+}
+.cre-box.consensus { border-color: var(--amber); color: var(--amber); background: rgba(245,158,11,0.08); }
+.cre-box.report { border-color: var(--teal); color: var(--teal); background: rgba(45,212,191,0.08); }
+.cre-chain-row { display: flex; gap: 10px; align-items: center; }
+.cre-box.chain { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.08); font-size: 11px; }
+.cre-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ── NAV UPDATE ─── */
+.nav-ticker {
+  text-align: center; padding: 24px;
+  background: var(--card); border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 16px; max-width: 380px; width: 100%;
+}
+.nav-old { font-size: 18px; color: var(--muted); text-decoration: line-through; margin-bottom: 4px; }
+.nav-new { font-size: 52px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+.nav-delta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 20px; padding: 4px 14px; font-size: 14px; color: var(--green); font-weight: 700;
+}
+.nav-reason {
+  margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.7;
+}
+
+/* ── PROFIT ─── */
+.profit-card {
+  background: var(--card); border: 1px solid rgba(34,197,94,0.4);
+  border-radius: 16px; padding: 28px 40px;
+  max-width: 520px; width: 100%; text-align: center;
+}
+.profit-title { font-size: 14px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+.profit-big { font-size: 56px; font-weight: 900; color: var(--green); line-height: 1; }
+.profit-pct {
+  font-size: 22px; font-weight: 700;
+  background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 20px; padding: 4px 16px; display: inline-block; margin: 8px 0 20px;
+  color: var(--green);
+}
+.pnl-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pnl-table td { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.pnl-table td:last-child { text-align: right; font-weight: 600; }
+.pnl-table tr:last-child td { border-bottom: none; color: var(--green); }
+.powered-by { margin-top: 16px; font-size: 11px; color: var(--muted); }
+.powered-by span { color: var(--teal); font-weight: 600; }
+
+/* ── RIGHT PANEL ─────────────────────────── */
+.right-panel {
+  width: 260px; flex-shrink: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.r-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.r-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+
+/* Wallet balances */
+.balance-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.balance-row:last-child { border-bottom: none; }
+.bal-coin {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; flex-shrink: 0;
+}
+.bal-usdc { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+.bal-rwa { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+.bal-info { flex: 1; }
+.bal-name { font-size: 11px; color: var(--muted); }
+.bal-amount { font-size: 15px; font-weight: 700; font-family: monospace; transition: color 0.3s; }
+.bal-usd { font-size: 10px; color: var(--muted); }
+
+/* P&L box */
+.pnl-box {
+  padding: 10px 12px; border-radius: 8px;
+  background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
+  margin-top: 10px;
+}
+.pnl-label { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+.pnl-value { font-size: 18px; font-weight: 800; color: var(--green); font-family: monospace; }
+.pnl-pct { font-size: 11px; color: var(--green); }
+.pnl-return { font-size: 10px; color: var(--muted); }
+
+/* Chainlink Services */
+.service-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.service-row:last-child { border-bottom: none; }
+.svc-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--dim); flex-shrink: 0;
+  transition: all 0.4s;
+}
+.service-row.active .svc-dot {
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  animation: pulse-svc 1.2s infinite;
+}
+.service-row.active-amber .svc-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation: pulse-svc 1.2s infinite; }
+.service-row.active-blue .svc-dot { background: var(--blue); box-shadow: 0 0 6px var(--blue); animation: pulse-svc 1.2s infinite; }
+.service-row.active-green .svc-dot { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-svc 1.2s infinite; }
+@keyframes pulse-svc { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+.svc-info { flex: 1; }
+.svc-name { font-size: 12px; font-weight: 600; color: var(--muted); transition: color 0.3s; }
+.service-row.active .svc-name,
+.service-row.active-amber .svc-name,
+.service-row.active-blue .svc-name,
+.service-row.active-green .svc-name { color: var(--text); }
+.svc-desc { font-size: 10px; color: var(--dim); transition: color 0.3s; }
+.service-row.active .svc-desc { color: var(--muted); }
+.svc-icon { font-size: 14px; }
+
+/* NAV live display */
+.nav-live {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 4px;
+}
+.nav-stat { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.nav-stat:last-child { border-bottom: none; }
+.nav-stat-label { font-size: 11px; color: var(--muted); }
+.nav-stat-val { font-size: 13px; font-weight: 700; font-family: monospace; }
+
+/* ── FOOTER ──────────────────────────────── */
+footer {
+  height: 60px; flex-shrink: 0;
+  background: var(--panel); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 20px;
+}
+.progress-wrap { flex: 1; }
+.progress-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.progress-bar-bg { height: 4px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); width: 0%; border-radius: 2px; transition: width 0.8s ease; }
+
+.btn-start {
+  padding: 10px 28px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal), var(--blue));
+  border: none; color: #000; font-weight: 800; font-size: 14px;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+.btn-start:hover:not(:disabled) { transform: scale(1.04); box-shadow: 0 0 20px rgba(45,212,191,0.4); }
+.btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-replay {
+  padding: 10px 28px; border-radius: 10px;
+  background: rgba(45,212,191,0.1); border: 1px solid var(--teal);
+  color: var(--teal); font-weight: 800; font-size: 14px;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  display: none;
+}
+.btn-replay:hover { background: rgba(45,212,191,0.2); }
+.btn-replay.show { display: block; }
+
+.footer-info { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.footer-info strong { color: var(--text); }
+
+/* Confetti */
+.confetti-wrap { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 100; }
+.confetti-piece {
+  position: absolute; width: 8px; height: 8px;
+  border-radius: 2px; top: -20px;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">LB</div>
+  <div>
+    <div class="header-title">LiquidBridge</div>
+    <div class="header-sub">NAV-Anchored AMM for Tokenized Securities</div>
+  </div>
+  <div class="header-spacer"></div>
+  <div style="font-size:11px;color:var(--muted);margin-right:8px;">Chainlink Convergence Hackathon 2026</div>
+  <div class="chainlink-badge">
+    <div class="cl-dot"></div>
+    Live on Base Sepolia
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- LEFT: STEPS -->
+  <div class="steps-panel">
+    <div class="steps-label">Demo Flow</div>
+
+    <div class="step-item" id="si-1">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <div class="step-name">Connect Wallet</div>
+        <div class="step-tag">MetaMask → Base Sepolia</div>
+      </div>
+    </div>
+    <div class="steps-connector" id="sc-1"></div>
+
+    <div class="step-item" id="si-2">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <div class="step-name">KYC Verification</div>
+        <div class="step-tag">Chainlink ACE / CCID</div>
+      </div>
+    </div>
+    <div class="steps-connector" id="sc-2"></div>
+
+    <div class="step-item" id="si-3">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <div class="step-name">Buy mBUILD</div>
+        <div class="step-tag">10,000 USDC → 99.95 mBUILD</div>
+      </div>
+    </div>
+    <div class="steps-connector" id="sc-3"></div>
+
+    <div class="step-item" id="si-4">
+      <div class="step-num">4</div>
+      <div class="step-info">
+        <div class="step-name">CRE Updates NAV</div>
+        <div class="step-tag">DON Consensus → On-chain</div>
+      </div>
+    </div>
+    <div class="steps-connector" id="sc-4"></div>
+
+    <div class="step-item" id="si-5">
+      <div class="step-num">5</div>
+      <div class="step-info">
+        <div class="step-name">Sell mBUILD</div>
+        <div class="step-tag">99.95 mBUILD → 10,044 USDC</div>
+      </div>
+    </div>
+    <div class="steps-connector" id="sc-5"></div>
+
+    <div class="step-item" id="si-6">
+      <div class="step-num">6</div>
+      <div class="step-info">
+        <div class="step-name">Profit Realized</div>
+        <div class="step-tag">+$44.77 · +0.45% 🎉</div>
+      </div>
+    </div>
+
+    <div class="story-box">
+      <div class="s-title">Story</div>
+      <div class="s-line">
+        <span>Faiz</span> has <span>10,000 USDC</span>.<br>
+        He buys <span>mBUILD</span> (mock BlackRock BUIDL) via LiquidBridge at NAV price.<br>
+        Chainlink <span>CRE</span> updates NAV from yield.<br>
+        Faiz sells at new NAV and earns <span style="color:var(--green)">+$44.77</span>.
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: MAIN VISUALIZATION -->
+  <div class="center-panel">
+
+    <!-- STEP 0: Idle / intro -->
+    <div class="step-content active" id="sc-idle">
+      <div style="text-align:center">
+        <div style="font-size:64px;margin-bottom:20px">🌉</div>
+        <div style="font-size:32px;font-weight:800;margin-bottom:8px">LiquidBridge Live Demo</div>
+        <div style="font-size:15px;color:var(--muted);max-width:460px;margin:0 auto 28px;line-height:1.7">
+          Watch <strong style="color:var(--text)">Faiz</strong> earn <strong style="color:var(--green)">+$44.77</strong> by trading tokenized securities with prices anchored to <strong style="color:var(--teal)">Chainlink NAVLink oracle</strong>.<br>
+          One click. Fully automated. End-to-end.
+        </div>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;text-align:center">
+            <div style="color:var(--teal);font-weight:700;font-size:18px">6</div>
+            <div style="color:var(--muted)">Chainlink Services</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;text-align:center">
+            <div style="color:var(--blue);font-weight:700;font-size:18px">±0.5%</div>
+            <div style="color:var(--muted)">Max NAV Deviation</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;text-align:center">
+            <div style="color:var(--green);font-weight:700;font-size:18px">22/22</div>
+            <div style="color:var(--muted)">Tests Passing</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;text-align:center">
+            <div style="color:var(--amber);font-weight:700;font-size:18px">0.05%</div>
+            <div style="color:var(--muted)">Minimum Fee</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Connect Wallet -->
+    <div class="step-content" id="sc-step1">
+      <div class="step-heading">Step 1 of 6</div>
+      <div class="step-title">Connecting Wallet</div>
+      <div class="wallet-box">
+        <div class="wallet-icon">🦊</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">MetaMask detected</div>
+        <div class="wallet-addr" id="wallet-addr">connecting...</div>
+        <div class="wallet-network">
+          <span style="width:7px;height:7px;background:#3B82F6;border-radius:50%;display:inline-block"></span>
+          Base Sepolia
+        </div>
+      </div>
+      <div class="step-desc" style="margin-top:20px">
+        Faiz connects his MetaMask wallet to LiquidBridge on Base Sepolia testnet.
+      </div>
+    </div>
+
+    <!-- STEP 2: KYC -->
+    <div class="step-content" id="sc-step2">
+      <div class="step-heading">Step 2 of 6</div>
+      <div class="step-title">KYC Verification</div>
+      <div class="kyc-box">
+        <div class="kyc-icon">🪪</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Chainlink ACE / CCID Check</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Address: 0x1A2B...Fa12</div>
+        <div class="kyc-steps">
+          <div class="kyc-step">
+            <div class="kyc-check" id="kc1">✅</div>
+            <div>Address lookup in compliance registry</div>
+          </div>
+          <div class="kyc-step">
+            <div class="kyc-check" id="kc2">✅</div>
+            <div>Identity verification passed</div>
+          </div>
+          <div class="kyc-step">
+            <div class="kyc-check" id="kc3">✅</div>
+            <div>AML screening cleared</div>
+          </div>
+        </div>
+        <div class="kyc-result" id="kyc-result">
+          ✅ Compliant — Faiz is verified to trade
+        </div>
+      </div>
+      <div class="step-desc" style="margin-top:20px">
+        Chainlink ACE verifies KYC/AML compliance. Enforced at the smart contract level — not just UI.
+      </div>
+    </div>
+
+    <!-- STEP 3: Buy mBUILD -->
+    <div class="step-content" id="sc-step3">
+      <div class="step-heading">Step 3 of 6</div>
+      <div class="step-title">Buying mBUILD</div>
+      <div class="swap-viz">
+        <div class="swap-token">
+          <div class="token-coin coin-usdc">$</div>
+          <div class="token-amount" id="buy-from-amt">10,000</div>
+          <div class="token-symbol">USDC</div>
+          <div class="token-usd">Faiz's stablecoins</div>
+        </div>
+        <div class="swap-middle">
+          <div class="swap-arrow">→</div>
+          <div class="oracle-pill">⛓ NAV: $100.00</div>
+          <div style="height:4px"></div>
+          <div class="fee-pill">Fee: 0.05%</div>
+        </div>
+        <div class="swap-token">
+          <div class="token-coin coin-rwa">B</div>
+          <div class="token-amount" style="color:var(--blue)" id="buy-to-amt">99.95</div>
+          <div class="token-symbol">mBUILD</div>
+          <div class="token-usd">≈ $9,995 value</div>
+        </div>
+      </div>
+      <div class="tx-hash" style="max-width:640px;width:100%;margin-top:12px">
+        🔗 TX: <span>0x3a7f...c841</span> · Base Sepolia · <span style="color:var(--green)">Confirmed ✓</span>
+      </div>
+      <div class="step-desc" style="margin-top:12px">
+        Faiz buys <strong>99.95 mBUILD</strong> at NAV price <strong>$100.00</strong>. Price stays within ±0.5% of oracle — guaranteed by smart contract.
+      </div>
+    </div>
+
+    <!-- STEP 4: CRE Updates NAV -->
+    <div class="step-content" id="sc-step4">
+      <div class="step-heading">Step 4 of 6 — CORE CHAINLINK INTEGRATION</div>
+      <div class="step-title" style="font-size:22px">Chainlink CRE Updates NAV</div>
+      <div class="cre-viz" id="cre-viz">
+        <!-- DON nodes -->
+        <div class="don-nodes" id="don-nodes">
+          <div class="don-node" id="dn0"><div class="n-icon">⬡</div>DON-1</div>
+          <div class="don-node" id="dn1"><div class="n-icon">⬡</div>DON-2</div>
+          <div class="don-node" id="dn2"><div class="n-icon">⬡</div>DON-3</div>
+          <div class="don-node" id="dn3"><div class="n-icon">⬡</div>DON-4</div>
+          <div class="don-node" id="dn4"><div class="n-icon">⬡</div>DON-5</div>
+          <div class="don-node" id="dn5"><div class="n-icon">⬡</div>DON-6</div>
+          <div class="don-node" id="dn6"><div class="n-icon">⬡</div>DON-7</div>
+        </div>
+        <!-- Each node fetches NAV from NAVLink -->
+        <div style="font-size:11px;color:var(--muted);text-align:center" id="cre-step-label">
+          Each DON node fetches NAV from Chainlink NAVLink independently...
+        </div>
+        <!-- Consensus -->
+        <div class="cre-box consensus" id="cre-consensus" style="opacity:0;transition:opacity 0.5s">
+          📊 Median Consensus: $100.50 — Byzantine Fault Tolerant
+        </div>
+        <!-- Signed report -->
+        <div class="cre-box report" id="cre-report" style="opacity:0;transition:opacity 0.5s">
+          🔐 DON-Signed Report (ECDSA + Keccak256) — runtime.report()
+        </div>
+        <!-- Chain -->
+        <div style="font-size:11px;color:var(--teal);opacity:0;transition:opacity 0.5s" id="cre-submit">
+          ↓ evmClient.writeReport() → CREReceiver.onReport()
+        </div>
+        <div class="cre-chain-row" id="cre-chain" style="opacity:0;transition:opacity 0.5s">
+          <div class="cre-box chain">
+            CREReceiver<br><span class="cre-label">onReport()</span>
+          </div>
+          <div style="color:var(--dim)">→</div>
+          <div class="cre-box chain">
+            NAVOracle<br><span class="cre-label">updateNAV()</span>
+          </div>
+          <div style="color:var(--dim)">→</div>
+          <div class="cre-box chain">
+            Pool.updateBounds()<br><span class="cre-label">±0.5% recalc</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Sell mBUILD -->
+    <div class="step-content" id="sc-step5">
+      <div class="step-heading">Step 5 of 6</div>
+      <div class="step-title">Selling mBUILD at New NAV</div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:16px">
+        <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:8px 16px;font-size:13px;text-align:center">
+          <div style="color:var(--muted);font-size:11px">Old NAV</div>
+          <div style="color:var(--muted);font-weight:700">$100.00</div>
+        </div>
+        <div style="font-size:20px;color:var(--green)">→</div>
+        <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:8px 16px;font-size:13px;text-align:center">
+          <div style="color:var(--muted);font-size:11px">New NAV</div>
+          <div style="color:var(--green);font-weight:800;font-size:18px">$100.50</div>
+        </div>
+        <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--green);font-weight:700">
+          +$0.50 yield 📈
+        </div>
+      </div>
+      <div class="swap-viz">
+        <div class="swap-token">
+          <div class="token-coin coin-rwa">B</div>
+          <div class="token-amount" style="color:var(--blue)">99.95</div>
+          <div class="token-symbol">mBUILD</div>
+          <div class="token-usd">Faiz's position</div>
+        </div>
+        <div class="swap-middle">
+          <div class="swap-arrow">→</div>
+          <div class="oracle-pill">⛓ NAV: $100.50</div>
+          <div style="height:4px"></div>
+          <div class="fee-pill">Fee: 0.05%</div>
+        </div>
+        <div class="swap-token">
+          <div class="token-coin coin-usdc">$</div>
+          <div class="token-amount" style="color:var(--green)">10,044.77</div>
+          <div class="token-symbol">USDC</div>
+          <div class="token-usd" style="color:var(--green)">↑ $44.77 gain!</div>
+        </div>
+      </div>
+      <div class="tx-hash" style="max-width:640px;width:100%;margin-top:12px">
+        🔗 TX: <span>0x9b2e...d417</span> · Base Sepolia · <span style="color:var(--green)">Confirmed ✓</span>
+      </div>
+    </div>
+
+    <!-- STEP 6: Profit -->
+    <div class="step-content" id="sc-step6">
+      <div class="step-heading">Result</div>
+      <div class="step-title" style="color:var(--green)">Faiz Made a Profit! 🎉</div>
+      <div class="profit-card">
+        <div class="profit-title">Total Return</div>
+        <div class="profit-big" id="profit-num">$0.00</div>
+        <div class="profit-pct" id="profit-pct">+0.00%</div>
+        <table class="pnl-table">
+          <tr><td style="color:var(--muted)">Initial Capital</td><td>$10,000.00 USDC</td></tr>
+          <tr><td style="color:var(--muted)">Buy Price (NAV)</td><td>$100.00 / mBUILD</td></tr>
+          <tr><td style="color:var(--muted)">Sell Price (NAV)</td><td>$100.50 / mBUILD</td></tr>
+          <tr><td style="color:var(--muted)">Swap Fee</td><td>0.05% × 2</td></tr>
+          <tr><td style="color:var(--muted)">Final Balance</td><td>$10,044.77 USDC</td></tr>
+          <tr><td><strong style="color:var(--green)">Net Profit</strong></td><td style="color:var(--green)">+$44.77 (0.45%)</td></tr>
+        </table>
+        <div class="powered-by">
+          Powered by <span>Chainlink CRE</span> · <span>NAVLink</span> · <span>Proof of Reserve</span> · <span>ACE/CCID</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Wallet balances -->
+    <div class="r-section">
+      <div class="r-label">Faiz's Wallet</div>
+      <div class="balance-row">
+        <div class="bal-coin bal-usdc">$</div>
+        <div class="bal-info">
+          <div class="bal-name">USDC</div>
+          <div class="bal-amount" id="bal-usdc">10,000.00</div>
+          <div class="bal-usd" id="bal-usdc-usd">≈ $10,000.00</div>
+        </div>
+      </div>
+      <div class="balance-row">
+        <div class="bal-coin bal-rwa">B</div>
+        <div class="bal-info">
+          <div class="bal-name">mBUILD</div>
+          <div class="bal-amount" id="bal-rwa" style="color:var(--blue)">0.00</div>
+          <div class="bal-usd" id="bal-rwa-usd">≈ $0.00</div>
+        </div>
+      </div>
+      <div class="pnl-box">
+        <div class="pnl-label">Portfolio Value</div>
+        <div class="pnl-value" id="port-value">$10,000.00</div>
+        <div class="pnl-return">P&L: <span class="pnl-pct" id="pnl-pct" style="color:var(--muted)">+$0.00 (0.00%)</span></div>
+      </div>
+    </div>
+
+    <!-- NAV Stats -->
+    <div class="r-section">
+      <div class="r-label">Oracle State</div>
+      <div class="nav-live">
+        <div class="nav-stat">
+          <div class="nav-stat-label">Current NAV</div>
+          <div class="nav-stat-val" id="nav-current" style="color:var(--teal)">$100.00</div>
+        </div>
+        <div class="nav-stat">
+          <div class="nav-stat-label">Upper Bound</div>
+          <div class="nav-stat-val" id="nav-upper" style="color:var(--red)">$100.50</div>
+        </div>
+        <div class="nav-stat">
+          <div class="nav-stat-label">Lower Bound</div>
+          <div class="nav-stat-val" id="nav-lower" style="color:var(--red)">$99.50</div>
+        </div>
+        <div class="nav-stat">
+          <div class="nav-stat-label">Reserve Ratio</div>
+          <div class="nav-stat-val" style="color:var(--green)">99.5%</div>
+        </div>
+        <div class="nav-stat">
+          <div class="nav-stat-label">Circuit Breaker</div>
+          <div class="nav-stat-val" style="color:var(--green)">Inactive ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chainlink Services -->
+    <div class="r-section" style="flex:1;overflow-y:auto">
+      <div class="r-label">Chainlink Services</div>
+      <div class="service-row" id="svc-cre">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">⚡ CRE</div>
+          <div class="svc-desc" id="svc-cre-desc">Waiting...</div>
+        </div>
+      </div>
+      <div class="service-row" id="svc-navlink">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">📊 NAVLink</div>
+          <div class="svc-desc" id="svc-navlink-desc">Idle</div>
+        </div>
+      </div>
+      <div class="service-row" id="svc-por">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">🔍 Proof of Reserve</div>
+          <div class="svc-desc" id="svc-por-desc">Idle</div>
+        </div>
+      </div>
+      <div class="service-row" id="svc-ace">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">🪪 ACE / CCID</div>
+          <div class="svc-desc" id="svc-ace-desc">Idle</div>
+        </div>
+      </div>
+      <div class="service-row" id="svc-automation">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">⏰ Automation</div>
+          <div class="svc-desc" id="svc-auto-desc">Idle</div>
+        </div>
+      </div>
+      <div class="service-row" id="svc-ccip">
+        <div class="svc-dot"></div>
+        <div class="svc-info">
+          <div class="svc-name">🌐 CCIP</div>
+          <div class="svc-desc">Cross-chain ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="step-label">Press ▶ START DEMO to begin</span>
+      <span id="step-count">0 / 6</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar" id="prog-bar"></div>
+    </div>
+  </div>
+  <div class="footer-info">
+    <strong>Base Sepolia</strong> · 7 Contracts · 22 Tests ✓
+  </div>
+  <button class="btn-start" id="btn-start" onclick="runDemo()">▶ START DEMO</button>
+  <button class="btn-replay" id="btn-replay" onclick="replayDemo()">↺ Replay</button>
+</footer>
+
+<!-- Confetti container -->
+<div class="confetti-wrap" id="confetti-wrap"></div>
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setService(id, state, desc) {
+  const el = $(id);
+  el.className = 'service-row' + (state ? ' ' + state : '');
+  const descEl = el.querySelector('.svc-desc');
+  if (desc && descEl) descEl.textContent = desc;
+}
+function clearServices() {
+  ['svc-cre','svc-navlink','svc-por','svc-ace','svc-automation','svc-ccip'].forEach(id => {
+    const el = $(id);
+    el.className = 'service-row';
+  });
+}
+
+function showContent(id) {
+  document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+  if (id) $(id).classList.add('active');
+}
+
+function markStep(num, done) {
+  for (let i = 1; i <= 6; i++) {
+    const el = $('si-' + i);
+    el.classList.remove('active', 'done');
+    if (i < num || done && i === num) el.classList.add('done');
+    if (i === num && !done) el.classList.add('active');
+    const conn = $('sc-' + i);
+    if (conn) conn.classList.toggle('done', i < num || done && i === num);
+  }
+}
+
+function updateProgress(step, total) {
+  const pct = (step / total) * 100;
+  $('prog-bar').style.width = pct + '%';
+  $('step-count').textContent = step + ' / ' + total;
+}
+
+function typeWriter(el, text, speed = 40) {
+  return new Promise(resolve => {
+    el.textContent = '';
+    let i = 0;
+    const t = setInterval(() => {
+      el.textContent += text[i++];
+      if (i >= text.length) { clearInterval(t); resolve(); }
+    }, speed);
+  });
+}
+
+// Animate a number from start to end
+function animateNumber(el, from, to, duration, prefix = '', suffix = '', decimals = 2) {
+  const start = Date.now();
+  const tick = () => {
+    const p = Math.min((Date.now() - start) / duration, 1);
+    const val = from + (to - from) * p;
+    el.textContent = prefix + val.toFixed(decimals) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// ── CONFETTI ──────────────────────────────────────────────
+function launchConfetti() {
+  const wrap = $('confetti-wrap');
+  const colors = ['#2DD4BF','#3B82F6','#22C55E','#F59E0B','#EF4444','#8B5CF6'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `
+        left:${Math.random()*100}%;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        animation-duration:${1.5+Math.random()*2}s;
+        animation-delay:${Math.random()*0.5}s;
+        width:${6+Math.random()*8}px;
+        height:${6+Math.random()*8}px;
+        border-radius:${Math.random()>0.5?'50%':'2px'};
+      `;
+      wrap.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+// ── WALLET BALANCE UPDATES ────────────────────────────────
+let balUSdc = 10000, balRwa = 0, nav = 100.00;
+
+function updateBalances() {
+  $('bal-usdc').textContent = balUSdc.toFixed(2);
+  $('bal-usdc-usd').textContent = '≈ $' + balUSdc.toFixed(2);
+  $('bal-rwa').textContent = balRwa.toFixed(2);
+  $('bal-rwa-usd').textContent = '≈ $' + (balRwa * nav).toFixed(2);
+  const portVal = balUSdc + balRwa * nav;
+  $('port-value').textContent = '$' + portVal.toFixed(2);
+  const pnl = portVal - 10000;
+  const pnlPct = (pnl / 10000) * 100;
+  const pnlEl = $('pnl-pct');
+  pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2) + ' (' + pnlPct.toFixed(2) + '%)';
+  pnlEl.style.color = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)';
+}
+
+function updateNav(newNav) {
+  nav = newNav;
+  $('nav-current').textContent = '$' + newNav.toFixed(2);
+  $('nav-upper').textContent = '$' + (newNav * 1.005).toFixed(2);
+  $('nav-lower').textContent = '$' + (newNav * 0.995).toFixed(2);
+}
+
+// ── DEMO RUNNER ───────────────────────────────────────────
+async function runDemo() {
+  $('btn-start').disabled = true;
+  $('step-label').textContent = 'Demo running...';
+  clearServices();
+
+  // STEP 1: Connect Wallet
+  markStep(1); updateProgress(0, 6);
+  $('step-label').textContent = 'Connecting wallet...';
+  showContent('sc-step1');
+  setService('svc-ccip', 'active-blue', 'Base Sepolia connected');
+  const addrEl = $('wallet-addr');
+  await typeWriter(addrEl, '0x1A2B3C...Fa12', 30);
+  await sleep(1800);
+
+  // STEP 2: KYC
+  markStep(2); updateProgress(1, 6);
+  $('step-label').textContent = 'Verifying KYC with Chainlink ACE...';
+  showContent('sc-step2');
+  setService('svc-ace', 'active-green', 'Verifying identity...');
+  await sleep(600);
+  $('kc1').classList.add('visible'); await sleep(500);
+  $('kc2').classList.add('visible'); await sleep(500);
+  $('kc3').classList.add('visible'); await sleep(400);
+  $('kyc-result').classList.add('show');
+  setService('svc-ace', 'active-green', 'KYC verified ✓');
+  await sleep(1400);
+
+  // STEP 3: Buy mBUILD
+  markStep(3); updateProgress(2, 6);
+  $('step-label').textContent = 'Buying mBUILD via LiquidBridge...';
+  showContent('sc-step3');
+  clearServices();
+  setService('svc-navlink', 'active', 'Providing NAV price: $100.00');
+  setService('svc-ace', 'active-green', 'Compliance check: passed');
+  setService('svc-cre', 'active', 'DON price oracle active');
+  await sleep(2800);
+  // Execute the buy
+  balUSdc = 0; balRwa = 99.95;
+  updateBalances();
+  await sleep(500);
+
+  // STEP 4: CRE Network Update
+  markStep(4); updateProgress(3, 6);
+  $('step-label').textContent = 'Chainlink CRE updating NAV on-chain...';
+  showContent('sc-step4');
+  clearServices();
+  setService('svc-cre', 'active', 'Orchestrating DON workflow...');
+  setService('svc-navlink', 'active', 'Fetching yield data: $100.50');
+  setService('svc-por', 'active', 'Verifying reserves: 99.5%');
+  setService('svc-automation', 'active-amber', 'CronCapability: 60s trigger');
+
+  // Light up DON nodes one by one
+  const nodes = ['dn0','dn1','dn2','dn3','dn4','dn5','dn6'];
+  for (let i = 0; i < nodes.length; i++) {
+    await sleep(220);
+    $(nodes[i]).classList.add('lit');
+  }
+  $('cre-step-label').textContent = '7 nodes reached Byzantine Fault Tolerant consensus via median aggregation...';
+  await sleep(700);
+
+  $('cre-consensus').style.opacity = '1';
+  await sleep(800);
+  $('cre-report').style.opacity = '1';
+  $('cre-step-label').textContent = 'ECDSA + Keccak256 signed report generated → evmClient.writeReport()';
+  await sleep(700);
+  $('cre-submit').style.opacity = '1';
+  await sleep(500);
+  $('cre-chain').style.opacity = '1';
+  setService('svc-cre', 'active', 'DON report submitted ✓');
+  updateNav(100.50);
+  updateBalances();
+  await sleep(1200);
+
+  // STEP 5: Sell mBUILD
+  markStep(5); updateProgress(4, 6);
+  $('step-label').textContent = 'Selling mBUILD at new NAV $100.50...';
+  showContent('sc-step5');
+  clearServices();
+  setService('svc-navlink', 'active', 'New NAV: $100.50 (↑ yield)');
+  setService('svc-ace', 'active-green', 'Compliance check: passed');
+  setService('svc-cre', 'active', 'Price oracle confirming...');
+  await sleep(2800);
+  // Execute sell
+  balUSdc = 10044.77; balRwa = 0;
+  updateBalances();
+  await sleep(500);
+
+  // STEP 6: Profit
+  markStep(6, true); updateProgress(6, 6);
+  $('step-label').textContent = 'Demo complete — Faiz earned +$44.77!';
+  showContent('sc-step6');
+  clearServices();
+  setService('svc-cre', 'active', 'Mission complete ✓');
+  setService('svc-navlink', 'active', 'All prices on-chain ✓');
+  setService('svc-ace', 'active-green', 'All trades compliant ✓');
+  setService('svc-por', 'active', 'Reserves verified ✓');
+
+  // Animate profit
+  const profitEl = $('profit-num');
+  const pctEl = $('profit-pct');
+  let t = 0;
+  const tot = 1800, target = 44.77;
+  const profitInterval = setInterval(() => {
+    t += 30;
+    const p = Math.min(t / tot, 1);
+    const v = target * p;
+    profitEl.textContent = '+$' + v.toFixed(2);
+    pctEl.textContent = '+' + (v / 10000 * 100).toFixed(2) + '%';
+    if (t >= tot) clearInterval(profitInterval);
+  }, 30);
+
+  await sleep(600);
+  launchConfetti();
+
+  $('btn-replay').classList.add('show');
+  updateProgress(6, 6);
+}
+
+function replayDemo() {
+  // Reset everything
+  balUSdc = 10000; balRwa = 0;
+  nav = 100.00;
+  updateBalances(); updateNav(100.00);
+  clearServices();
+  markStep(0);
+  showContent('sc-idle');
+  $('btn-start').disabled = false;
+  $('btn-replay').classList.remove('show');
+  $('step-label').textContent = 'Press ▶ START DEMO to begin';
+  $('step-count').textContent = '0 / 6';
+  $('prog-bar').style.width = '0%';
+
+  // Reset KYC
+  ['kc1','kc2','kc3'].forEach(id => $(id).classList.remove('visible'));
+  $('kyc-result').classList.remove('show');
+
+  // Reset wallet addr
+  $('wallet-addr').textContent = 'connecting...';
+
+  // Reset CRE viz
+  ['dn0','dn1','dn2','dn3','dn4','dn5','dn6'].forEach(id => $(id).classList.remove('lit'));
+  ['cre-consensus','cre-report','cre-submit','cre-chain'].forEach(id => {
+    $(id).style.opacity = '0';
+  });
+  $('cre-step-label').textContent = 'Each DON node fetches NAV from Chainlink NAVLink independently...';
+
+  // Reset profit
+  $('profit-num').textContent = '$0.00';
+  $('profit-pct').textContent = '+0.00%';
+}
+
+// Init
+updateBalances();
+</script>
+</body>
+</html>

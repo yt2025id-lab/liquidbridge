@@ -35,6 +35,10 @@ interface ILiquidBridgePool {
     function addLiquidity(uint256 amountRWA, uint256 amountUSDC) external returns (uint256 liquidity);
     function removeLiquidity(uint256 liquidity) external returns (uint256 amountRWA, uint256 amountUSDC);
 
+    function updateBounds() external;
+    function activateCircuitBreaker() external;
+    function deactivateCircuitBreaker() external;
+
     function getPoolState() external view returns (PoolState memory);
     function getAmountOut(address tokenIn, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee);
 }

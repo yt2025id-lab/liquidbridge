@@ -1,0 +1,8 @@
+{
+  "schedule": "0 * * * * *",
+  "navApiUrl": "http://localhost:3001/api/nav",
+  "chainSelectorName": "base-testnet-sepolia",
+  "navOracleAddress": "0x74ec721De6164Cc203FEa1EcFA2670896C47A90C",
+  "poolAddress": "0x61d60590b5a47628D895F71e072BFA531189Da7F",
+  "creReceiverAddress": "0x0000000000000000000000000000000000000000"
+}

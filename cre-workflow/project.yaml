@@ -1,0 +1,13 @@
+staging-settings:
+  rpcs:
+    - chain-name: base-testnet-sepolia
+      url: https://sepolia.base.org
+
+production-settings:
+  account:
+    workflow-owner-address: "0x0000000000000000000000000000000000000000"
+  rpcs:
+    - chain-name: base-testnet-sepolia
+      url: https://sepolia.base.org
+    - chain-name: ethereum-mainnet
+      url: https://eth.llamarpc.com

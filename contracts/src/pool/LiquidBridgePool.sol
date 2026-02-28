@@ -93,6 +93,12 @@ contract LiquidBridgePool is ILiquidBridgePool, ERC20, ReentrancyGuard, Ownable 
         INAVOracle.NAVData memory navData = navOracle.getLatestNAV();
         require(!navData.isStale, "Pool: oracle stale");
 
+        // Enforce NAV bounds — effective price must stay within ±0.5% of NAV
+        require(
+            lowerBound == 0 || (navData.nav >= lowerBound && navData.nav <= upperBound),
+            "Pool: price outside NAV bounds"
+        );
+
         uint256 reserveRWA = rwaToken.balanceOf(address(this));
         uint256 reserveUSDC = usdcToken.balanceOf(address(this));
 

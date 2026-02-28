@@ -27,7 +27,11 @@ const CONFIG = {
   rpcUrl: "https://sepolia.base.org",
   navOracleAddress: "0x74ec721De6164Cc203FEa1EcFA2670896C47A90C" as Hex,
   poolAddress: "0x61d60590b5a47628D895F71e072BFA531189Da7F" as Hex,
-  privateKey: (process.env.PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80") as Hex,
+  privateKey: (() => {
+    const key = process.env.PRIVATE_KEY;
+    if (!key) throw new Error("PRIVATE_KEY environment variable is required. Set it in .env file.");
+    return key as Hex;
+  })(),
   updateIntervalMs: 60_000, // 60 seconds
   initialNAV: 100.0, // $100.00
 };

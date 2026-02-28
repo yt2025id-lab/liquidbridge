@@ -9,6 +9,7 @@ import "../src/oracle/NAVOracle.sol";
 import "../src/factory/LiquidBridgeFactory.sol";
 import "../src/router/LiquidBridgeRouter.sol";
 import "../src/pool/LiquidBridgePool.sol";
+import "../src/oracle/CREReceiver.sol";
 
 contract Deploy is Script {
     function run() external {
@@ -45,7 +46,16 @@ contract Deploy is Script {
         compliance.addToWhitelist(pool);
         compliance.addToWhitelist(address(router));
 
-        // 8. Seed initial liquidity: 10,000 mBUILD + 1,000,000 USDC
+        // 8. Deploy CREReceiver (forwarder = deployer for hackathon demo)
+        CREReceiver creReceiver = new CREReceiver(
+            address(navOracle),
+            pool,
+            deployer // In production: Chainlink KeystoneForwarder address
+        );
+        navOracle.addAuthorizedUpdater(address(creReceiver));
+        LiquidBridgePool(pool).addAuthorizedUpdater(address(creReceiver));
+
+        // 9. Seed initial liquidity: 10,000 mBUILD + 1,000,000 USDC
         mBuild.mint(deployer, 10_000e18);
         usdc.mint(deployer, 1_000_000e6);
 
@@ -64,5 +74,6 @@ contract Deploy is Script {
         console.log("LiquidBridgeFactory:", address(factory));
         console.log("LiquidBridgePool:", pool);
         console.log("LiquidBridgeRouter:", address(router));
+        console.log("CREReceiver:", address(creReceiver));
     }
 }

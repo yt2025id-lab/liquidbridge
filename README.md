@@ -24,18 +24,25 @@ LiquidBridge is an AMM specifically designed for tokenized securities with:
 ┌──────────────────────────────────────────────────────┐
 │            CRE WORKFLOW (Chainlink DON)               │
 │                                                       │
-│  Cron ──► Fetch NAV ──► Verify Reserves ──► Update   │
-│           (NAVLink)     (Proof of Reserve)  Oracle    │
-│                                               │       │
-│                                         Update Bounds │
-│                                               │       │
-│                                    Check Circuit      │
-│                                    Breaker            │
+│  Cron ──► Fetch NAV ──► Verify Reserves              │
+│           (NAVLink)     (Proof of Reserve)            │
+│               │               │                       │
+│               ▼               ▼                       │
+│         DON Consensus (Median Aggregation)            │
+│                      │                                │
+│              Generate DON-signed Report               │
+│                      │                                │
+│              writeReport()                            │
 └──────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌──────────────────────────────────────────────────────┐
 │              SMART CONTRACTS (Base Sepolia)            │
+│                                                       │
+│  CREReceiver (KeystoneForwarder bridge)              │
+│       │                                               │
+│       ├──► NAVOracle.updateNAV()                     │
+│       └──► LiquidBridgePool.updateBounds()           │
 │                                                       │
 │  NAVOracle ──► LiquidBridgePool ◄── ComplianceVerifier│
 │  (NAV data)    (NAV-anchored AMM)   (ACE/CCID)       │
@@ -82,7 +89,7 @@ Dynamic fee scales quadratically from center to bounds, naturally incentivizing 
 
 - **Smart Contracts**: Solidity 0.8.24, Foundry, OpenZeppelin
 - **Frontend**: Next.js 15, Tailwind CSS, RainbowKit, wagmi v2, recharts
-- **CRE Workflow**: TypeScript, Chainlink CRE SDK
+- **CRE Workflow**: TypeScript, Chainlink CRE SDK (`@chainlink/cre-sdk`)
 - **Chain**: Base Sepolia
 
 ## Quick Start
@@ -90,6 +97,7 @@ Dynamic fee scales quadratically from center to bounds, naturally incentivizing 
 ### Prerequisites
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
 - Node.js 18+
+- [CRE CLI](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux) (optional, for CRE simulation)
 
 ### Smart Contracts
 ```bash
@@ -107,11 +115,27 @@ npm run dev
 # Open http://localhost:3000
 ```
 
-### CRE Workflow (Standalone)
+### CRE Workflow
+
+**Standalone mode** (direct on-chain writes via wallet):
 ```bash
 cd cre-workflow
 npm install
-npm start
+npm run start:standalone
+```
+
+**CRE simulation** (DON-signed reports via CRE SDK):
+```bash
+cd cre-workflow
+npm install
+npm run simulate
+```
+
+**Mock NAV API** (simulates NAVLink data source):
+```bash
+cd cre-workflow
+npm run start:mock-api
+# Runs on http://localhost:3001
 ```
 
 ## Contract Addresses (Base Sepolia)
@@ -125,16 +149,58 @@ npm start
 | LiquidBridgeFactory | `0x18b70a873cA71682122c6CC58BC401185fefE47f` |
 | LiquidBridgePool | `0x61d60590b5a47628D895F71e072BFA531189Da7F` |
 | LiquidBridgeRouter | `0xCc824965d3624F5a8852dfC46E02a5f497F02967` |
+| CREReceiver | `TBD (deploy with Deploy.s.sol)` |
+
+## CRE Workflow Architecture
+
+The CRE workflow uses the `@chainlink/cre-sdk` to orchestrate NAV updates:
+
+```
+1. CronCapability triggers every 60 seconds
+2. HTTPClient fetches NAV from data source (NodeMode + median consensus)
+3. EVMClient reads current on-chain state
+4. runtime.report() generates DON-signed report
+5. evmClient.writeReport() submits to CREReceiver contract
+6. CREReceiver.onReport() → NAVOracle.updateNAV() → Pool.updateBounds()
+```
+
+The `CREReceiver` contract acts as a bridge between the Chainlink KeystoneForwarder and the existing NAVOracle/Pool system, decoding the DON-signed report and forwarding the NAV update.
 
 ## Demo Flow (For Judges)
 
-1. **Connect wallet** to Base Sepolia
-2. Go to **Portfolio** → Click **"Get 10,000 USDC"** and **"Get 100 mBUILD"**
-3. Click **"Complete KYC Verification"** (self-whitelist)
-4. Go to **Swap** → Enter amount → See NAV price, dynamic fee, reserve ratio
-5. Execute a swap → Observe price stays near NAV
-6. Go to **Pool Dashboard** → See NAV chart with bounds
-7. Observe CRE Workflow updating NAV every 60 seconds
+### Step-by-Step (5 minutes)
+
+1. **Connect wallet** to Base Sepolia (get testnet ETH from [Base Sepolia Faucet](https://www.alchemy.com/faucets/base-sepolia))
+2. Go to **Portfolio** tab:
+   - Click **"Get 10,000 USDC"** → Confirm transaction → Wait for confirmation
+   - Click **"Get 100 mBUILD"** → Confirm transaction → Wait for confirmation
+   - Click **"Complete KYC Verification"** → This simulates Chainlink ACE compliance
+3. Go to **Swap** tab:
+   - Select mBUILD → USDC direction
+   - Enter **1** mBUILD → Observe the NAV-anchored quote (~$99.95)
+   - Note: **Dynamic Fee** shows 0.05% (pool is balanced)
+   - Note: **Reserve Ratio** shows ~99.5%
+   - Click **"Approve mBUILD"** → Confirm → Then click **"Swap"** → Confirm
+   - Price stays within ±0.5% of NAV — this is the core innovation
+4. Go to **Pool Dashboard** tab:
+   - See live NAV chart with upper/lower bounds (±0.5%)
+   - See TVL, volume, swap count, and fee statistics
+5. Go to **Liquidity** tab:
+   - Enter amounts for both mBUILD and USDC
+   - Follow the step-by-step approval flow (Step 1: Approve mBUILD → Step 2: Approve USDC → Add Liquidity)
+6. **CRE Workflow** (run in a separate terminal):
+   ```bash
+   cd cre-workflow && PRIVATE_KEY=<deployer_key> npm run start:standalone
+   ```
+   - Watch NAV updates every 60 seconds in the terminal
+   - See the Pool Dashboard chart update in real-time
+
+### What to Look For
+- **Price stays within ±0.5% of NAV** — unlike Uniswap where price drifts freely
+- **Dynamic fee increases** when pool becomes imbalanced — try a large swap and check fee
+- **Circuit breaker activates** when reserve ratio drops below 98%
+- **KYC required** — non-whitelisted wallets cannot trade
+- **CRE workflow** updates NAV oracle every 60 seconds via DON-signed reports
 
 ## Testing
 
@@ -142,7 +208,7 @@ npm start
 cd contracts
 forge test -v
 
-# Output:
+# Output (22 tests):
 # [PASS] test_SwapRWAtoUSDC()
 # [PASS] test_SwapUSDCtoRWA()
 # [PASS] test_SwapRevert_NotCompliant()
@@ -151,7 +217,10 @@ forge test -v
 # [PASS] test_CircuitBreakerAutoActivate()
 # [PASS] test_CircuitBreakerAutoDeactivate()
 # [PASS] test_DynamicFeeIncreasesWithImbalance()
-# ... 14 tests pass
+# [PASS] test_OnReport_UpdatesNAVAndBounds()
+# [PASS] test_OnReport_RevertsUnauthorized()
+# [PASS] test_OnReport_TriggersCircuitBreaker()
+# ... 22 tests pass
 ```
 
 ## License
