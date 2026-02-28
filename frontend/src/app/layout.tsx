@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LiquidBridge - NAV-Anchored AMM for Tokenized Securities",
+  title: "LiquidBridge — Invest in Tokenized Funds",
   description:
-    "Trade tokenized real-world assets with NAV-anchored pricing, powered by Chainlink CRE",
+    "Buy and sell BlackRock BUIDL tokens at the real price, instantly. Powered by Chainlink.",
 };
 
 export default function RootLayout({
@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 text-slate-900 min-h-screen`}
       >
         <Providers>
           <Header />

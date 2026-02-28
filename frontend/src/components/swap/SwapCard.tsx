@@ -9,12 +9,14 @@ import {
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import { CONTRACTS, ABIS } from "@/lib/contracts";
-import { formatUSDC, formatNAV, cn } from "@/lib/utils";
+import { formatNAV, cn } from "@/lib/utils";
 import { usePool } from "@/hooks/usePool";
 import { useNAV } from "@/hooks/useNAV";
 import { useTokenBalances } from "@/hooks/useTokenBalances";
 import { useCompliance } from "@/hooks/useCompliance";
-import { ArrowDownUp, Shield, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, CheckCircle } from "lucide-react";
+
+type Tab = "buy" | "sell";
 
 export function SwapCard() {
   const { address, isConnected } = useAccount();
@@ -23,34 +25,25 @@ export function SwapCard() {
   const { usdcBalance, rwaBalance, refetch: refetchBalances } = useTokenBalances();
   const { isCompliant, selfWhitelist, isWhitelisting } = useCompliance();
 
-  const [isRwaToUsdc, setIsRwaToUsdc] = useState(true);
+  const [tab, setTab] = useState<Tab>("buy");
   const [inputAmount, setInputAmount] = useState("");
-  const [quoteResult, setQuoteResult] = useState<{
-    amountOut: bigint;
-    fee: bigint;
-  } | null>(null);
+  const [quoteResult, setQuoteResult] = useState<{ amountOut: bigint; fee: bigint } | null>(null);
 
-  const tokenIn = isRwaToUsdc ? CONTRACTS.mockRWAToken : CONTRACTS.mockUSDC;
-  const tokenInSymbol = isRwaToUsdc ? "mBUILD" : "USDC";
-  const tokenOutSymbol = isRwaToUsdc ? "USDC" : "mBUILD";
-  const tokenInDecimals = isRwaToUsdc ? 18 : 6;
-  const tokenOutDecimals = isRwaToUsdc ? 6 : 18;
-  const balance = isRwaToUsdc ? rwaBalance : usdcBalance;
+  // buy = USDC → mBUILD, sell = mBUILD → USDC
+  const isBuy = tab === "buy";
+  const tokenIn = isBuy ? CONTRACTS.mockUSDC : CONTRACTS.mockRWAToken;
+  const tokenInDecimals = isBuy ? 6 : 18;
+  const tokenOutDecimals = isBuy ? 18 : 6;
+  const balance = isBuy ? usdcBalance : rwaBalance;
 
-  const parsedAmount = inputAmount
-    ? parseUnits(inputAmount, tokenInDecimals)
-    : BigInt(0);
+  const parsedAmount = inputAmount ? parseUnits(inputAmount, tokenInDecimals) : BigInt(0);
 
-  // Get quote
   const { data: quote } = useReadContract({
     address: CONTRACTS.pool,
     abi: ABIS.pool,
     functionName: "getAmountOut",
     args: [tokenIn, parsedAmount],
-    query: {
-      enabled: parsedAmount > BigInt(0),
-      refetchInterval: 5000,
-    },
+    query: { enabled: parsedAmount > BigInt(0), refetchInterval: 5000 },
   });
 
   useEffect(() => {
@@ -62,33 +55,20 @@ export function SwapCard() {
     }
   }, [quote]);
 
-  // Check allowance
   const { data: allowance } = useReadContract({
-    address: isRwaToUsdc ? CONTRACTS.mockRWAToken : CONTRACTS.mockUSDC,
-    abi: isRwaToUsdc ? ABIS.rwaToken : ABIS.usdc,
+    address: isBuy ? CONTRACTS.mockUSDC : CONTRACTS.mockRWAToken,
+    abi: isBuy ? ABIS.usdc : ABIS.rwaToken,
     functionName: "allowance",
     args: [address!, CONTRACTS.pool],
     query: { enabled: !!address },
   });
+  const needsApproval = allowance !== undefined && parsedAmount > (allowance as bigint);
 
-  const needsApproval =
-    allowance !== undefined && parsedAmount > (allowance as bigint);
-
-  // Approve
-  const {
-    writeContract: approve,
-    data: approveHash,
-    isPending: isApproving,
-  } = useWriteContract();
+  const { writeContract: approve, data: approveHash, isPending: isApproving } = useWriteContract();
   const { isLoading: isApproveConfirming, isSuccess: approveSuccess } =
     useWaitForTransactionReceipt({ hash: approveHash });
 
-  // Swap
-  const {
-    writeContract: swap,
-    data: swapHash,
-    isPending: isSwapping,
-  } = useWriteContract();
+  const { writeContract: swap, data: swapHash, isPending: isSwapping } = useWriteContract();
   const { isLoading: isSwapConfirming, isSuccess: swapSuccess } =
     useWaitForTransactionReceipt({ hash: swapHash });
 
@@ -101,263 +81,290 @@ export function SwapCard() {
 
   const handleApprove = () => {
     approve({
-      address: isRwaToUsdc ? CONTRACTS.mockRWAToken : CONTRACTS.mockUSDC,
-      abi: isRwaToUsdc ? ABIS.rwaToken : ABIS.usdc,
+      address: isBuy ? CONTRACTS.mockUSDC : CONTRACTS.mockRWAToken,
+      abi: isBuy ? ABIS.usdc : ABIS.rwaToken,
       functionName: "approve",
       args: [CONTRACTS.pool, parsedAmount],
     });
   };
 
   const handleSwap = () => {
-    if (!quoteResult) return;
-    const minOut = (quoteResult.amountOut * BigInt(995)) / BigInt(1000); // 0.5% slippage
+    if (!quoteResult || !address) return;
+    const minOut = (quoteResult.amountOut * BigInt(995)) / BigInt(1000);
     swap({
       address: CONTRACTS.pool,
       abi: ABIS.pool,
       functionName: "swap",
-      args: [tokenIn, parsedAmount, minOut, address!],
+      args: [tokenIn, parsedAmount, minOut, address],
     });
   };
 
   const navPrice = nav ? Number(nav) / 1e6 : 0;
-  const feePercent = currentFee ? Number(currentFee) / 100 : 0;
+  const feePercent = currentFee ? Number(currentFee) / 100 : 0.05;
   const reservePercent = reserveRatio ? Number(reserveRatio) / 100 : 0;
-
   const isLoading = isApproving || isApproveConfirming || isSwapping || isSwapConfirming;
+
+  const balanceFormatted =
+    balance !== undefined
+      ? Number(formatUnits(balance, tokenInDecimals)).toFixed(isBuy ? 2 : 4)
+      : "—";
+
+  const outputFormatted = quoteResult
+    ? Number(formatUnits(quoteResult.amountOut, tokenOutDecimals)).toFixed(isBuy ? 4 : 2)
+    : "—";
+
+  // unused var suppression
+  void formatNAV;
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6 shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Swap</h2>
-          <div className="flex items-center gap-2">
-            {isCompliant ? (
-              <span className="flex items-center gap-1 text-xs text-teal-400 bg-teal-400/10 px-2 py-1 rounded-full">
-                <Shield size={12} /> Verified
-              </span>
-            ) : isConnected ? (
-              <button
-                onClick={selfWhitelist}
-                disabled={isWhitelisting}
-                className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full hover:bg-yellow-400/20 transition"
-              >
-                {isWhitelisting ? (
-                  <Loader2 size={12} className="animate-spin" />
-                ) : (
-                  <AlertTriangle size={12} />
-                )}
-                {isWhitelisting ? "Verifying..." : "Verify KYC"}
-              </button>
-            ) : null}
-          </div>
-        </div>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
 
-        {/* Circuit Breaker Warning */}
-        {poolState?.circuitBreakerActive && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center gap-2">
-            <AlertTriangle size={16} />
-            Circuit breaker active - Trading paused
-          </div>
-        )}
-
-        {/* From Token */}
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">From</span>
-            {balance !== undefined && (
-              <button
-                onClick={() =>
-                  setInputAmount(formatUnits(balance, tokenInDecimals))
-                }
-                className="text-xs text-gray-400 hover:text-teal-400 transition"
-              >
-                Balance: {Number(formatUnits(balance, tokenInDecimals)).toFixed(tokenInDecimals === 6 ? 2 : 4)}
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              value={inputAmount}
-              onChange={(e) => setInputAmount(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 bg-transparent text-2xl text-white outline-none placeholder-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <div className="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-xl">
-              <div
-                className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                  isRwaToUsdc
-                    ? "bg-blue-500 text-white"
-                    : "bg-green-500 text-white"
-                )}
-              >
-                {isRwaToUsdc ? "B" : "$"}
-              </div>
-              <span className="text-white font-medium">{tokenInSymbol}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Swap Direction Button */}
-        <div className="flex justify-center -my-2 relative z-10">
+        {/* Buy / Sell Tabs */}
+        <div className="flex border-b border-slate-100">
           <button
-            onClick={() => {
-              setIsRwaToUsdc(!isRwaToUsdc);
-              setInputAmount("");
-            }}
-            className="bg-gray-800 border-4 border-gray-900 rounded-xl p-2 hover:bg-gray-700 transition text-gray-400 hover:text-teal-400"
+            onClick={() => { setTab("buy"); setInputAmount(""); }}
+            className={cn(
+              "flex-1 py-3.5 text-sm font-semibold transition-all",
+              tab === "buy"
+                ? "text-teal-700 border-b-2 border-teal-600 bg-teal-50/50"
+                : "text-slate-400 hover:text-slate-600"
+            )}
           >
-            <ArrowDownUp size={18} />
+            Buy BUIDL
+          </button>
+          <button
+            onClick={() => { setTab("sell"); setInputAmount(""); }}
+            className={cn(
+              "flex-1 py-3.5 text-sm font-semibold transition-all",
+              tab === "sell"
+                ? "text-rose-600 border-b-2 border-rose-500 bg-rose-50/50"
+                : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            Sell BUIDL
           </button>
         </div>
 
-        {/* To Token */}
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">To (estimated)</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="flex-1 text-2xl text-white">
-              {quoteResult
-                ? Number(
-                    formatUnits(quoteResult.amountOut, tokenOutDecimals)
-                  ).toFixed(tokenOutDecimals === 6 ? 2 : 4)
-                : "0.00"}
-            </span>
-            <div className="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-xl">
+        <div className="p-6">
+          {/* Circuit Breaker */}
+          {poolState?.circuitBreakerActive && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+              <AlertTriangle size={15} />
+              Trading is temporarily paused. Please try again later.
+            </div>
+          )}
+
+          {/* Stale Oracle */}
+          {isStale && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm flex items-center gap-2">
+              <AlertTriangle size={15} />
+              Price data is being refreshed. Please wait a moment.
+            </div>
+          )}
+
+          {/* You Pay */}
+          <div className="mb-1">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                You Pay
+              </span>
+              {balance !== undefined && (
+                <button
+                  onClick={() => setInputAmount(formatUnits(balance, tokenInDecimals))}
+                  className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                >
+                  Balance: {balanceFormatted}
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 focus-within:border-teal-400 transition-colors">
               <div
                 className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                  !isRwaToUsdc
-                    ? "bg-blue-500 text-white"
-                    : "bg-green-500 text-white"
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white",
+                  isBuy ? "bg-emerald-500" : "bg-blue-500"
                 )}
               >
-                {!isRwaToUsdc ? "B" : "$"}
+                {isBuy ? "$" : "B"}
               </div>
-              <span className="text-white font-medium">{tokenOutSymbol}</span>
+              <input
+                type="number"
+                value={inputAmount}
+                onChange={(e) => setInputAmount(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 bg-transparent text-xl font-semibold text-slate-900 outline-none placeholder-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <span className="text-slate-600 font-semibold text-sm">
+                {isBuy ? "USDC" : "BUIDL"}
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Price Info */}
-        {parsedAmount > BigInt(0) && (
-          <div className="mt-4 p-3 bg-gray-800/30 rounded-xl space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Oracle NAV</span>
-              <span className="text-white font-mono">
-                {formatNAV(nav || BigInt(0))}
+          {/* Arrow divider */}
+          <div className="flex justify-center my-3">
+            <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-sm">
+              ↓
+            </div>
+          </div>
+
+          {/* You Receive */}
+          <div className="mb-5">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                You Receive
+              </span>
+              <span className="text-xs text-slate-400">Estimated</span>
+            </div>
+            <div className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white",
+                  isBuy ? "bg-blue-500" : "bg-emerald-500"
+                )}
+              >
+                {isBuy ? "B" : "$"}
+              </div>
+              <span className="flex-1 text-xl font-semibold text-slate-900">
+                {quoteResult ? outputFormatted : <span className="text-slate-300">0.00</span>}
+              </span>
+              <span className="text-slate-600 font-semibold text-sm">
+                {isBuy ? "BUIDL" : "USDC"}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Dynamic Fee</span>
-              <span className="text-teal-400 font-mono">
-                {feePercent.toFixed(2)}%
-              </span>
-            </div>
-            {quoteResult && (
-              <div className="flex justify-between">
-                <span className="text-gray-400">Fee Amount</span>
-                <span className="text-gray-300 font-mono">
-                  {isRwaToUsdc
-                    ? `$${formatUSDC(quoteResult.fee)}`
-                    : `${Number(formatUnits(quoteResult.fee, 18)).toFixed(4)} mBUILD`}
+          </div>
+
+          {/* Price Details */}
+          {navPrice > 0 && (
+            <div className="mb-5 bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-100 text-sm">
+              <div className="flex justify-between px-4 py-2.5">
+                <span className="text-slate-500">Current price</span>
+                <span className="font-semibold text-slate-800">
+                  ${navPrice.toFixed(2)} per BUIDL
                 </span>
               </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-gray-400">Reserve Ratio</span>
-              <span
-                className={cn(
-                  "font-mono",
-                  reservePercent >= 99
-                    ? "text-green-400"
-                    : reservePercent >= 98
-                    ? "text-yellow-400"
-                    : "text-red-400"
-                )}
-              >
-                {reservePercent.toFixed(1)}%
-              </span>
+              <div className="flex justify-between px-4 py-2.5">
+                <span className="text-slate-500">Platform fee</span>
+                <span className="font-medium text-slate-700">{feePercent.toFixed(2)}%</span>
+              </div>
+              <div className="flex justify-between px-4 py-2.5">
+                <span className="text-slate-500">Fund health</span>
+                <span
+                  className={cn(
+                    "font-medium flex items-center gap-1",
+                    reservePercent >= 99
+                      ? "text-emerald-600"
+                      : reservePercent >= 98
+                      ? "text-amber-600"
+                      : "text-red-500"
+                  )}
+                >
+                  {reservePercent >= 98 && <CheckCircle size={13} />}
+                  {reservePercent.toFixed(1)}%
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Action Button */}
-        <div className="mt-4">
+          {/* KYC Notice */}
+          {isConnected && !isCompliant && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={15} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-amber-800 font-semibold">Identity verification required</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Securities regulations require a one-time check before trading.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={selfWhitelist}
+                disabled={isWhitelisting}
+                className="mt-2.5 w-full py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition flex items-center justify-center gap-2"
+              >
+                {isWhitelisting && <Loader2 size={14} className="animate-spin" />}
+                {isWhitelisting ? "Verifying..." : "Verify Identity (Free)"}
+              </button>
+            </div>
+          )}
+
+          {/* Success */}
+          {swapSuccess && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm flex items-center gap-2">
+              <CheckCircle size={15} />
+              {isBuy ? "Purchase" : "Sale"} complete! Your balance has been updated.
+            </div>
+          )}
+
+          {/* Action Button */}
           {!isConnected ? (
-            <button
-              disabled
-              className="w-full py-4 rounded-xl bg-gray-700 text-gray-400 font-semibold text-lg"
-            >
-              Connect Wallet
-            </button>
+            <div className="w-full py-4 rounded-xl bg-slate-100 text-slate-400 font-semibold text-sm text-center">
+              Connect your wallet to trade
+            </div>
           ) : !isCompliant ? (
             <button
-              onClick={selfWhitelist}
-              disabled={isWhitelisting}
-              className="w-full py-4 rounded-xl bg-yellow-500/20 text-yellow-400 font-semibold text-lg hover:bg-yellow-500/30 transition flex items-center justify-center gap-2"
+              disabled
+              className="w-full py-4 rounded-xl bg-slate-100 text-slate-400 font-semibold text-sm"
             >
-              {isWhitelisting ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <Shield size={20} />
-              )}
-              {isWhitelisting ? "Verifying..." : "Complete KYC Verification"}
+              Verify identity to continue
             </button>
           ) : poolState?.circuitBreakerActive ? (
             <button
               disabled
-              className="w-full py-4 rounded-xl bg-red-500/20 text-red-400 font-semibold text-lg"
+              className="w-full py-4 rounded-xl bg-red-50 text-red-400 font-semibold text-sm"
             >
-              Circuit Breaker Active
+              Trading paused
             </button>
           ) : !inputAmount || parsedAmount === BigInt(0) ? (
             <button
               disabled
-              className="w-full py-4 rounded-xl bg-gray-700 text-gray-400 font-semibold text-lg"
+              className="w-full py-4 rounded-xl bg-slate-100 text-slate-400 font-semibold text-sm"
             >
-              Enter Amount
+              Enter an amount
             </button>
           ) : needsApproval && !approveSuccess ? (
             <button
               onClick={handleApprove}
               disabled={isLoading}
-              className="w-full py-4 rounded-xl bg-teal-500/20 text-teal-400 font-semibold text-lg hover:bg-teal-500/30 transition flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2"
             >
-              {isApproving || isApproveConfirming ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : null}
+              {(isApproving || isApproveConfirming) && (
+                <Loader2 size={18} className="animate-spin" />
+              )}
               {isApproving
-                ? "Approving..."
+                ? "Waiting for approval..."
                 : isApproveConfirming
                 ? "Confirming..."
-                : `Approve ${tokenInSymbol}`}
+                : "Approve to continue"}
             </button>
           ) : (
             <button
               onClick={handleSwap}
-              disabled={isLoading}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-teal-500 to-blue-500 text-white font-semibold text-lg hover:from-teal-600 hover:to-blue-600 transition flex items-center justify-center gap-2"
+              disabled={isLoading || !quoteResult}
+              className={cn(
+                "w-full py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-white text-base",
+                tab === "buy"
+                  ? "bg-teal-600 hover:bg-teal-700"
+                  : "bg-rose-500 hover:bg-rose-600"
+              )}
             >
-              {isSwapping || isSwapConfirming ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : null}
+              {(isSwapping || isSwapConfirming) && (
+                <Loader2 size={18} className="animate-spin" />
+              )}
               {isSwapping
-                ? "Swapping..."
+                ? "Processing..."
                 : isSwapConfirming
-                ? "Confirming..."
-                : `Swap ${tokenInSymbol} → ${tokenOutSymbol}`}
+                ? "Confirming on chain..."
+                : tab === "buy"
+                ? "Buy BUIDL"
+                : "Sell BUIDL"}
             </button>
           )}
-        </div>
 
-        {/* Powered By */}
-        <p className="text-center text-xs text-gray-600 mt-4">
-          Powered by Chainlink CRE + NAVLink
-        </p>
+          <p className="text-center text-xs text-slate-400 mt-4">
+            ⛓ Price updated every 60s by Chainlink · 0.5% slippage protection
+          </p>
+        </div>
       </div>
     </div>
   );
