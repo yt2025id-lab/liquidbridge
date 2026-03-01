@@ -11,6 +11,7 @@
  * In production, this would be a CRE Workflow deployed to a Chainlink DON.
  */
 
+import "dotenv/config";
 import {
   createPublicClient,
   createWalletClient,
@@ -38,7 +39,6 @@ const CONFIG = {
 
 const NAV_ORACLE_ABI = parseAbi([
   "function updateNAV(uint256 newNAV, uint256 newReserveRatio) external",
-  "function getLatestNAV() external view returns (tuple(uint256 nav, uint256 timestamp, uint256 reserveRatio, bool isStale))",
 ]);
 
 const POOL_ABI = parseAbi([
