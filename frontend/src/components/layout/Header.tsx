@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Image from "next/image";
 import { Zap, BarChart3, TrendingUp, Wallet } from "lucide-react";
 
 const navLinks = [
-  { href: "/",          label: "TRADE",     icon: <Zap       size={18} strokeWidth={1.75} /> },
+  { href: "/trade",     label: "TRADE",     icon: <Zap       size={18} strokeWidth={1.75} /> },
   { href: "/pool",      label: "MARKETS",   icon: <BarChart3  size={18} strokeWidth={1.75} /> },
   { href: "/liquidity", label: "EARN",      icon: <TrendingUp size={18} strokeWidth={1.75} /> },
   { href: "/portfolio", label: "MY ASSETS", icon: <Wallet     size={18} strokeWidth={1.75} /> },
@@ -15,18 +16,11 @@ const navLinks = [
 
 function Logo() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-      <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="8" fill="#0D1117" />
-        <path d="M6 22 Q16 10 26 22" stroke="#00A3FF" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <path d="M6 22 Q16 14 26 22" stroke="rgba(0,163,255,0.3)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-        <circle cx="6" cy="22" r="2" fill="#00A3FF" />
-        <circle cx="26" cy="22" r="2" fill="#00A3FF" />
-        <circle cx="16" cy="11" r="1.5" fill="#00CC88" />
-      </svg>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <Image src="/LogoLiquidBridgeTransparan.png" width={44} height={44} alt="LiquidBridge" />
       <span
         className="hidden sm:block"
-        style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, fontWeight: 600, letterSpacing: "2px", lineHeight: 1, color: "var(--text-primary)", textTransform: "uppercase" }}
+        style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: "1px", lineHeight: 1, color: "var(--text-primary)", textTransform: "uppercase" }}
       >
         Liquid<span style={{ color: "var(--accent-blue)" }}>Bridge</span>
       </span>
