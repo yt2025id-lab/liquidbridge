@@ -1,21 +1,360 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap');
+
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
 }
 
+/* ─────────────────────────────────────────────
+   LIGHT MODE (default)
+───────────────────────────────────────────── */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --bg-page: #F4F6F9;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #F8FAFC;
+  --bg-input: #F0F4F8;
+  --bg-input-focus: #FFFFFF;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --text-primary: #1A2024;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --text-placeholder: #CBD5E1;
+  --accent: #00A3FF;
+  --accent-blue: #00A3FF;
+  --accent-blue-bg: #EBF8FF;
+  --accent-green: #00CC88;
+  --accent-yellow: #F59E0B;
+  --accent-red: #EF4444;
+  --surface-secondary: #F0F4F8;
+  --nav-bg: rgba(244, 246, 249, 0.96);
+  --nav-bg-scrolled: rgba(244, 246, 249, 0.99);
+  --nav-border-top: rgba(255, 255, 255, 1.0);
+  --nav-border-bottom: rgba(255, 255, 255, 0.4);
+  --nav-item-active-bg: rgba(255, 255, 255, 0.75);
+  --nav-item-active-shadow: 0 1px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 8px 28px rgba(0,0,0,0.10);
+  --shadow-input-focus: 0 0 0 3px rgba(0, 163, 255, 0.15);
+  --gradient-hero: radial-gradient(
+    ellipse 140% 45% at 50% 0%,
+    rgba(0, 163, 255, 0.10) 0%,
+    rgba(0, 204, 136, 0.05) 40%,
+    transparent 70%
+  );
 }
 
+/* ─────────────────────────────────────────────
+   DARK MODE — deep navy, Lido-inspired
+───────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Deep navy background */
+  --bg-page: #0F1119;
+  --bg-surface: #1A1F2E;
+  --bg-surface-2: #141927;
+  --bg-input: #242B3D;
+  --bg-input-focus: #2A3347;
+
+  /* Subtle blue-tinted borders */
+  --border: rgba(99, 132, 255, 0.12);
+  --border-strong: rgba(99, 132, 255, 0.20);
+
+  /* Text — soft, not harsh white */
+  --text-primary: #E8EDF5;
+  --text-secondary: #8892A4;
+  --text-muted: #5A6478;
+  --text-placeholder: #3D4558;
+
+  /* Accents */
+  --accent: #4DA8FF;
+  --accent-blue: #4DA8FF;
+  --accent-blue-bg: rgba(77, 168, 255, 0.12);
+  --accent-green: #2DD4A0;
+  --accent-yellow: #F0B429;
+  --accent-red: #F87171;
+
+  --surface-secondary: #242B3D;
+
+  /* Navbar — dark glass */
+  --nav-bg: rgba(15, 17, 25, 0.96);
+  --nav-bg-scrolled: rgba(15, 17, 25, 0.99);
+  --nav-border-top: rgba(99, 132, 255, 0.15);
+  --nav-border-bottom: rgba(99, 132, 255, 0.08);
+  --nav-item-active-bg: rgba(99, 132, 255, 0.12);
+  --nav-item-active-shadow: 0 1px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  /* Shadows — darker, deeper */
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.25);
+  --card-shadow-hover: 0 8px 28px rgba(0,0,0,0.5);
+
+  --shadow-input-focus: 0 0 0 3px rgba(77, 168, 255, 0.20);
+
+  /* Hero gradient — deep blue glow */
+  --gradient-hero: radial-gradient(
+    ellipse 140% 50% at 50% 0%,
+    rgba(77, 168, 255, 0.12) 0%,
+    rgba(45, 212, 160, 0.06) 45%,
+    transparent 72%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   APPLY VARIABLES — every element adapts
+───────────────────────────────────────────── */
+
+/* All card-like surfaces */
+.card,
+[class*="card"]:not([class*="card-body"]):not([class*="CardBody"]),
+[class*="Card"]:not([class*="card-body"]):not([class*="CardBody"]),
+[class*="panel"],
+[class*="Panel"],
+[class*="form"],
+[class*="Form"] {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  color: var(--text-primary);
+}
+
+/* FAQ items */
+[class*="faq"],
+[class*="FAQ"],
+[class*="accordion"],
+[class*="Accordion"] {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+/* Token avatars dark contrast */
+[data-theme="dark"] [class*="token-avatar"],
+[data-theme="dark"] [class*="TokenAvatar"] {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
+}
+
+/* Powered-by / status pills */
+[class*="chainlink-pill"],
+[class*="ChainlinkPill"],
+[class*="status-pill"] {
+  background: var(--bg-surface);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* Alert/warning banners */
+[class*="alert"],
+[class*="Alert"] {
+  background: rgba(240, 180, 41, 0.08);
+  border-color: rgba(240, 180, 41, 0.2);
+}
+
+/* Footer note text */
+[class*="footer-note"],
+[class*="FooterNote"] {
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-color: var(--bg-page);
+  background-image: var(--gradient-hero);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: 'Manrope', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
+/* ─────────────────────────────────────────────
+   NAVBAR — iOS 26 Liquid Glass
+───────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 60px;
+  display: flex;
+  align-items: center;
+
+  background: var(--nav-bg);
+  backdrop-filter: blur(48px) saturate(200%) brightness(1.08);
+  -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.08);
+
+  border-top: 1px solid var(--nav-border-top);
+  border-bottom: 1px solid var(--nav-border-bottom);
+  border-left: none;
+  border-right: none;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.03);
+
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.navbar.scrolled {
+  background: var(--nav-bg-scrolled);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .navbar {
+  backdrop-filter: blur(48px) saturate(180%) brightness(0.95);
+  -webkit-backdrop-filter: blur(48px) saturate(180%) brightness(0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Kill ANY underline artifacts on nav links */
+.navbar a::after,
+.navbar a::before,
+.navbar button::after,
+.navbar button::before,
+nav a::after,
+nav a::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   NAV LINKS — CSS-only hover & active
+───────────────────────────────────────────── */
+:root {
+  --nav-link-rest:       rgba(30, 41, 59, 0.55);
+  --nav-link-hover:      rgba(30, 41, 59, 0.90);
+  --nav-link-hover-bg:   rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] {
+  --nav-link-rest:       rgba(232, 237, 245, 0.45);
+  --nav-link-hover:      rgba(232, 237, 245, 0.80);
+  --nav-link-hover-bg:   rgba(255, 255, 255, 0.05);
+}
+
+.nav-link {
+  color: var(--nav-link-rest);
+  background: transparent;
+  transition: color 0.18s ease, background-color 0.18s ease !important;
+}
+.nav-link:hover {
+  color: var(--nav-link-hover) !important;
+  background: var(--nav-link-hover-bg) !important;
+}
+.nav-link.nav-active {
+  color: #00A3FF !important;
+  background: transparent !important;
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--surface-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─────────────────────────────────────────────
+   INPUTS
+───────────────────────────────────────────── */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 100px;
+  outline: none;
+  border: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--accent);
+  box-shadow: 0 2px 6px rgba(0, 163, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* ─────────────────────────────────────────────
+   CARDS / SURFACES
+───────────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover) !important;
+}
+
+/* ─────────────────────────────────────────────
+   TRADE HERO ATMOSPHERE — dark mode override
+   (light mode handled via inline style in page.tsx)
+───────────────────────────────────────────── */
+[data-theme="dark"] .trade-hero {
+  background: radial-gradient(
+    ellipse 70% 100% at 50% 0%,
+    rgba(77, 168, 255, 0.09) 0%,
+    rgba(77, 168, 255, 0.04) 40%,
+    transparent 70%
+  ) !important;
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────────── */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.page-enter {
+  animation: pageFadeIn 0.25s ease forwards;
+}
+
+/* ─────────────────────────────────────────────
+   SMOOTH THEME TRANSITIONS
+   Applied to all elements so dark mode feels
+   polished. Exceptions: transforms/animations
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease !important;
+}
+
+/* Don't override transform/opacity transitions */
+.page-enter,
+.card-hover,
+.card-hover:hover {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease !important;
+}
