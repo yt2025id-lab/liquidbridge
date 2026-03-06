@@ -1,0 +1,10 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { Header } from "./Header";
+import { LandingNavbar } from "./LandingNavbar";
+
+export function ConditionalNavbar() {
+  const pathname = usePathname();
+  return pathname === "/" ? <LandingNavbar /> : <Header />;
+}
