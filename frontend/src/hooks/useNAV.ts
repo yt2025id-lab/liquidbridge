@@ -59,11 +59,16 @@ export function useNAV() {
       };
     }) || [];
 
+  // Consider data fresh if updated within 120 seconds, regardless of on-chain flag
+  const ageSeconds = navData?.timestamp
+    ? Math.floor(Date.now() / 1000) - Number(navData.timestamp)
+    : Infinity;
+
   return {
     nav: navData?.nav,
     timestamp: navData?.timestamp,
     reserveRatio: navData?.reserveRatio,
-    isStale: navData?.isStale ?? false,
+    isStale: ageSeconds <= 120 ? false : (navData?.isStale ?? false),
     history,
     refetch,
   };
