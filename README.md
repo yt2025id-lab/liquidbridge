@@ -8,6 +8,7 @@
 
 **Chainlink Convergence Hackathon 2026 · DeFi & Tokenization Track**
 
+[![Presentation](https://img.shields.io/badge/Presentation-Watch%20Now-FF0000?style=for-the-badge&logo=googledrive)](https://drive.google.com/file/d/1JsKHLS0hFp5cujgwy0rb2Vbkv-o_leAz/view?usp=sharing)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-liquidbridge.vercel.app-00A3FF?style=for-the-badge&logo=vercel)](https://liquidbridge.vercel.app)
 [![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passing-00CC88?style=for-the-badge&logo=checkmarx)](https://github.com/yt2025id-lab/liquidbridge)
 [![Chain](https://img.shields.io/badge/Chain-Base%20Sepolia-0052FF?style=for-the-badge&logo=coinbase)](https://sepolia.basescan.org)
